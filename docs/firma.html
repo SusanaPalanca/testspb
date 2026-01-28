@@ -1,1 +1,61 @@
 
+<!doctype html>
+<html lang="es">
+<head>
+  <meta charset="utf-8"/>
+  <title>Firma asistida con AutoFirma (trifásico)</title>
+  <meta name="viewport" content="width=device-width, initial-scale=1"/>
+
+  <style>
+    body { font-family: system-ui, Segoe UI, Roboto, Arial, sans-serif; margin: 2rem; }
+    .box { border: 1px solid #ddd; border-radius: 8px; padding: 1rem; margin-bottom: 1rem; }
+    .ok { color: #0b7; }
+    .err { color: #d00; }
+    button { padding: .6rem 1rem; border-radius: 6px; border: 1px solid #ccc; background: #f7f7f7; cursor: pointer; }
+    button:hover { background: #eee; }
+    code { background: #f3f3f3; padding: .1rem .3rem; border-radius: 4px; }
+  </style>
+
+  <!-- ⚠️ IMPORTANTE: Carga de AutoScript del servicio auxiliar de AutoFirma
+       La ruta real la determina tu despliegue de servicios (Manual del Integrador).
+       Ejemplos ilustrativos: /autoscript/autofirma.js, /autofirma/AutoScript.js, etc.
+       Consulta tu servicio auxiliar y reemplaza la siguiente línea por la URL correcta. -->
+  /autoscript/autofirma.js</script>
+</head>
+<body>
+  <h1>Firma asistida con AutoFirma</h1>
+  <p class="box">Esta página abrirá <strong>AutoFirma</strong> al cargar, pedirá el certificado
+     al usuario y completará el flujo <strong>trifásico</strong> (pre → firma local → post → result).</p>
+
+  <div id="status" class="box">Preparando…</div>
+  <div id="result" class="box"></div>
+  <button id="retryBtn" style="display:none">Reintentar firma</button>
+
+  <script>
+  (function(){
+    const $status = document.getElementById('status');
+    const $result = document.getElementById('result');
+    const $retry = document.getElementById('retryBtn');
+
+    // Lee parámetros de FO (docId, company, return opcional)
+    const qs = new URLSearchParams(location.search);
+    const docId   = qs.get('docId');    // Ej: DocuRef.DocumentId
+    const company = qs.get('company');  // Ej: compañía/entidad legal
+    const retUrl  = qs.get('return');   // opcional: URL de retorno
+
+    // BACKEND (cámbialo por tus endpoints reales)
+    const BASE    = "https://tu-backend.example.com";
+    const PRE_URL = BASE + "/api/sign/pre";
+    const POST_URL= BASE + "/api/sign/post";
+    const RES_URL = BASE + "/api/sign/result";
+
+    // Configuración de firma (ejemplos; ajusta según tu política)
+    const DEFAULT_FORMAT    = "PAdES";           // formato de firma PDF
+    const DEFAULT_ALGORITHM = "SHA256withRSA";   // algoritmo
+    const EXTRA_PARAMS = {                       // parámetros extra (visible/invisible, razón, etc.)
+      "signatureType": "visible",                // "visible" | "invisible"
+      "signatureReason": "Aprobación",
+      "signatureLocation": "Valencia",
+      // Posición y tamaño (ejemplo). Ajusta según tu PDF (página y rectángulo):
+      "page": 1,
+      "rectangle": { x: 100, y: 650, width: 200, height: 60 }
